@@ -1,0 +1,252 @@
+{
+  "collection": {
+    "colocation_tolerance_m": 0.25,
+    "timeout_s": 25
+  },
+  "preprocess": {
+    "segmentation": {
+      "model_path": "<SEMANTIC_MODEL_DIR>",
+      "device": "cuda",
+      "allow_cpu": false,
+      "allow_windows_inference": false,
+      "inference_size": 512,
+      "class_groups": {
+        "dynamic": [
+          "person",
+          "car",
+          "bus",
+          "truck",
+          "van",
+          "minibike",
+          "bicycle"
+        ],
+        "sky": [
+          "sky"
+        ],
+        "ground": [
+          "road",
+          "sidewalk",
+          "floor",
+          "path"
+        ]
+      },
+      "dynamic_confidence": 0.6,
+      "sky_confidence": 0.8,
+      "sky_exclusion_confidence": 0.5,
+      "ground_confidence": 0.8,
+      "dynamic_dilation_px": 3,
+      "core_erosion_px": 2
+    }
+  },
+  "sfm": {
+    "device": "cpu",
+    "threads": 8,
+    "neighbors": 8,
+    "holdout_fraction": 0.0,
+    "minimum_registered_fraction": 1.0,
+    "minimum_physical_stations": 3,
+    "minimum_seed_stations": 2,
+    "minimum_seed_angle_degrees": 2.0,
+    "maximum_reprojection_error_px": 3.0,
+    "gps_horizontal_sigma_m": 3.0,
+    "gps_vertical_sigma_m": 20.0
+  },
+  "quality": {
+    "enabled": false
+  },
+  "inspection": {
+    "enabled": false
+  },
+  "workflow": "panorama_brush_refine",
+  "panorama_preprocess": {
+    "sam_segmentation": {
+      "backend": "sam3",
+      "python_executable": "<SAM3_PYTHON>",
+      "model_path": "<SAM3_MODEL_DIR>",
+      "processor_path": "<SAM3_MODEL_DIR>",
+      "device": "cuda",
+      "dtype": "bfloat16",
+      "model_repo": "facebook/sam3",
+      "model_revision": "3c879f39826c281e95690f02c7821c4de09afae7",
+      "instance_score_threshold": 0.3,
+      "instance_mask_threshold": 0.5,
+      "concept_groups": {
+        "dynamic": [
+          "person",
+          "car",
+          "bus",
+          "truck",
+          "van",
+          "motorcycle",
+          "bicycle"
+        ],
+        "sky": [
+          "sky"
+        ],
+        "ground": [
+          "road",
+          "sidewalk"
+        ]
+      },
+      "allow_cpu": false,
+      "allow_windows_inference": false,
+      "dynamic_confidence": 0.5,
+      "sky_confidence": 0.8,
+      "sky_exclusion_confidence": 0.5,
+      "ground_confidence": 0.5,
+      "dynamic_dilation_px": 3,
+      "core_erosion_px": 2,
+      "instance_verifier": {
+        "model_path": "<RTDETR_MODEL_DIR>",
+        "processor_path": "<RTDETR_MODEL_DIR>",
+        "model_repo": "PekingU/rtdetr_v2_r50vd",
+        "model_revision": "282494075698cab9faa1096ae26856890030c817",
+        "device": "cuda",
+        "dtype": "float32",
+        "min_detection_score": 0.3,
+        "backend": "rtdetr_v2",
+        "allow_cpu": false,
+        "allow_windows_inference": false,
+        "expected_files_sha256": "<RTDETR_FILES_SHA256>",
+        "concept_labels": {
+          "person": [
+            "person"
+          ],
+          "car": [
+            "car",
+            "bus",
+            "truck"
+          ],
+          "bus": [
+            "car",
+            "bus",
+            "truck"
+          ],
+          "truck": [
+            "car",
+            "bus",
+            "truck"
+          ],
+          "van": [
+            "car",
+            "bus",
+            "truck"
+          ],
+          "motorcycle": [
+            "motorcycle",
+            "motorbike"
+          ],
+          "bicycle": [
+            "bicycle"
+          ]
+        },
+        "minimum_box_iou": 0.25,
+        "minimum_mask_inside_box_fraction": 0.5
+      }
+    },
+    "sky_segmentation": {
+      "model_path": "<SEMANTIC_MODEL_DIR>",
+      "device": "cuda",
+      "allow_cpu": false,
+      "allow_windows_inference": false,
+      "inference_size": 512,
+      "class_groups": {
+        "dynamic": [
+          "person",
+          "car",
+          "bus",
+          "truck",
+          "van",
+          "minibike",
+          "bicycle"
+        ],
+        "sky": [
+          "sky"
+        ],
+        "ground": [
+          "road",
+          "sidewalk",
+          "floor",
+          "path"
+        ]
+      },
+      "dynamic_confidence": 0.6,
+      "sky_confidence": 0.8,
+      "sky_exclusion_confidence": 0.5,
+      "ground_confidence": 0.8,
+      "dynamic_dilation_px": 3,
+      "core_erosion_px": 2
+    },
+    "flux": {
+      "model_receipt_path": "<FLUX_RECEIPT_PATH>",
+      "model_receipt_sha256": "<FLUX_RECEIPT_SHA256>",
+      "model_revision": "92196c8e11f7b6cf2b7493e037d8c5345c559216",
+      "python_executable": "<FLUX_PYTHON>",
+      "prompt": "Remove all people and vehicles from this image. Reconstruct the background that they occluded using the surrounding road, pavement, and scenery. Keep exactly the same camera position, perspective, composition, buildings, road markings, vegetation, signs, sky, lighting, and all other static details. Photorealistic empty street. Do not add objects or change the scene.",
+      "erp_width": 2048,
+      "steps": 4,
+      "guidance_scale": 1.0,
+      "seed": 42
+    },
+    "common_transform": [
+      [
+        1.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        1.0,
+        0.0
+      ]
+    ],
+    "feather_at_2048": 4.0,
+    "dilation_at_2048": 2.0,
+    "sky_instance_score_threshold": 0.5,
+    "object_projection": "native_cubes"
+  },
+  "brush_refine": {
+    "brush_binary": "<BRUSH_BINARY>",
+    "brush_sha256": "<BRUSH_SHA256>",
+    "renderer_library": "<GSPLAT_LIBRARY>",
+    "renderer_library_sha256": "<GSPLAT_LIBRARY_SHA256>"
+  },
+  "sky_cleanup": {
+    "enabled": true,
+    "device": "cuda",
+    "policy": {
+      "erosion_radius_px": 2,
+      "minimum_sky_stations": 3,
+      "sky_to_non_sky_ratio": 0.25,
+      "depth_non_sky_abstention": true,
+      "depth_factor": 1.5,
+      "soft_size_ratio": 0.1,
+      "protect_down": true,
+      "minimum_down_stations": 1,
+      "protect_camera_below": true,
+      "nearest_camera_stations": 3,
+      "hard_size_ratio": null
+    }
+  },
+  "sky_depth": {
+    "side": 504,
+    "gpu_lock": "<DEPTH_GPU_LOCK_PATH>",
+    "extra_python": "",
+    "pose": {
+      "repo_path": "<DA3_POSE_REPO>",
+      "repo_revision": "3d835ec1a5802d64a8b8b15f817a1ab54809bfe4",
+      "model_path": "<DA3_POSE_MODEL_DIR>",
+      "model_name": "da3-large",
+      "model_sha256": "<DA3_POSE_MODEL_SHA256>",
+      "config_sha256": "<DA3_POSE_CONFIG_SHA256>"
+    },
+    "metric": {
+      "repo_path": "<DA3_METRIC_REPO>",
+      "repo_revision": "41736238f5bced4debf3f2a12375d2466874866d",
+      "model_path": "<DA3_METRIC_MODEL_DIR>",
+      "model_name": "da3nested-giant-large",
+      "model_sha256": "<DA3_METRIC_MODEL_SHA256>",
+      "config_sha256": "<DA3_METRIC_CONFIG_SHA256>"
+    }
+  }
+}

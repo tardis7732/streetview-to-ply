@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101519"><title>Streetview Studio · 거리에서 공간으로</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%23baf3cc' d='M16 2 30 16 16 30 2 16Z'/%3E%3Cpath fill='%23101519' d='M16 6 26 16 16 26 6 16Z'/%3E%3Cpath fill='%23baf3cc' d='M16 9 23 16 16 23 9 16Z'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""><link rel="stylesheet" href="/style.css">
+<script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script><script defer src="/app.js"></script>
+</head>
+<body>
+<header class="app-header"><a class="brand" href="/" aria-label="Streetview Studio 홈"><span class="brand-symbol">◈</span><span>STREETVIEW <strong>STUDIO</strong></span><span class="version">BETA</span></a><div class="header-caption">거리에서 공간으로 <span>ROADVIEW → GAUSSIAN</span></div><div class="connection"><span id="connection-dot" class="status-dot"></span><span id="connection-label">서버 연결 중</span></div></header>
+<div class="page-heading"><div><span class="eyebrow">NEW RECONSTRUCTION</span><h1>새로운 공간 만들기</h1></div><ol class="workflow" aria-label="진행 단계"><li class="current"><b>01</b> 범위 선택</li><li><b>02</b> 촬영 자료 확인</li><li><b>03</b> PLY 생성</li></ol></div>
+<section class="recipe-panel panel" aria-labelledby="recipe-heading">
+<div class="recipe-controls"><h2 id="recipe-heading">제작 프리셋</h2><label class="field-label" for="recipe-select">사용할 설정</label><select id="recipe-select"><option value="">현재 설정</option></select><p id="recipe-note" class="helper" role="status">프리셋을 확인하고 있습니다.</p><div class="recipe-save"><input id="recipe-name" type="text" maxlength="100" placeholder="새 프리셋 이름" aria-label="새 프리셋 이름"><button id="save-recipe" class="button secondary" type="button">프리셋 저장</button></div><details class="advanced-options"><summary>고급 설정</summary><div class="advanced-grid"><label>학습 단계<input id="training-steps" type="number" min="100" max="100000" step="100" value="6000"></label><label>학습 해상도<input id="training-resolution" type="number" min="128" max="4096" step="1" value="768"></label><label>가우시안 상한<input id="training-splats" type="number" min="1000" max="10000000" step="1000" value="1000000"></label></div><p class="helper">선택한 프리셋은 저장된 설정을 사용합니다.</p></details></div>
+<figure class="recipe-preview"><img id="recipe-image" alt="선택한 프리셋의 대표 결과 이미지" hidden><div id="recipe-image-empty">프리셋의 대표 이미지가 여기에 표시됩니다.</div><figcaption id="recipe-image-caption">대표 참고 이미지 · 새 작업의 결과 미리보기가 아닙니다.</figcaption></figure>
+</section>
+<main class="workspace">
+<aside class="sidebar panel">
+<section class="generation-mode-section"><p class="helper">여러 촬영 지점을 연결해 주변 공간을 만듭니다.</p></section>
+<div class="sidebar-scroll">
+<section class="control-section"><div class="section-heading"><h2><span class="step-number">01</span> 수집 범위</h2><span class="small-tag">NAVER</span></div><p class="muted">지도에서 수집할 영역의 중심을 클릭하세요.</p>
+<form id="coordinate-form" class="coordinate-form"><label>위도<input id="latitude" type="number" step="any" min="-90" max="90" placeholder="위도 입력" aria-label="중심 위도"></label><label>경도<input id="longitude" type="number" step="any" min="-180" max="180" placeholder="경도 입력" aria-label="중심 경도"></label><button type="submit" class="icon-button" title="좌표로 이동" aria-label="입력한 좌표로 이동">↗</button></form>
+<div class="radius-heading"><label for="radius-value">수집 반경</label><span><input id="radius-value" type="number" min="10" step="any" value="100" aria-label="수집 반경 미터"> m</span></div><input id="radius" class="range" type="range" min="10" max="1000" step="10" value="100" aria-label="수집 반경 빠른 조절"><div class="range-labels"><span>10 m</span><span id="radius-range-max">1,000 m</span></div>
+<button id="discover" class="button primary full" disabled><span class="search-icon">⌕</span><span id="discover-label">주변 거리뷰 조회</span></button><button id="load-more" class="button secondary full load-more" hidden>거리뷰 더 불러오기</button><p id="scope-note" class="helper">중심 위치를 선택하면 조회할 수 있습니다.</p></section>
+<section class="control-section"><div class="section-heading"><h2><span class="step-number">02</span> 촬영 조건</h2><span id="date-count" class="subtle">조회 후 선택</span></div><div class="segmented" role="group" aria-label="촬영 날짜 조건"><button data-mode="same_day" class="active" aria-pressed="true">동일 날짜</button><button data-mode="same_month" aria-pressed="false">동일 월</button><button data-mode="any" aria-pressed="false">전체</button></div><label class="field-label" for="capture-date">확인된 촬영 날짜</label><select id="capture-date" disabled><option value="">먼저 거리뷰를 조회하세요</option></select></section>
+<section class="station-section"><div class="section-heading"><h2>촬영 지점 <span id="station-count" class="count-badge">0</span></h2><div id="selection-tools" class="selection-tools"><button id="select-all" disabled>전체 포함</button><button id="clear-selection" disabled>전체 제외</button></div></div><p id="station-help" class="helper station-help">체크를 해제하면 생성 입력에서 제외됩니다.<br>제외한 지점도 거리뷰를 확인할 수 있습니다.</p><div id="station-list" class="station-list" aria-label="촬영 지점 학습 포함 목록"><div class="empty-list"><span>⌖</span><p>선택한 범위의 거리뷰가<br>여기에 표시됩니다.</p></div></div></section>
+</div>
+<div class="selection-footer">
+<div class="selection-total"><span><span id="selection-title">학습 포함</span> <span id="excluded-total" class="excluded-total">제외 <b id="excluded-count">0</b>개</span></span><strong><span id="selected-count">0</span><small id="selection-limit">개</small></strong></div>
+<div class="generation-options" role="group" aria-label="생성 옵션"><label title="하늘 영역을 마스크로 학습에서 제외합니다."><input id="remove-sky" type="checkbox" checked>하늘 제거</label><label title="인물과 차량 영역을 마스크로 학습에서 제외합니다."><input id="mask-dynamic" type="checkbox" checked>인물·차량 마스크</label></div>
+<div id="generation-depth-options" class="size-options" role="group" aria-label="뎁스 정리"><label class="check-label"><input id="depth-cleanup-enabled" type="checkbox" disabled>뎁스 기반 부유물 정리</label><p id="depth-cleanup-note" class="helper">깊이·하늘 정보를 참고해 부유물을 정리합니다. 바닥 보호를 유지합니다.</p></div>
+<div id="generation-size-options" class="size-options" role="group" aria-label="큰 가우시안 필터">
+<div class="size-option-row"><label class="check-label"><input id="size-filter-enabled" type="checkbox">큰 가우시안 제거</label><label class="size-percent"><input id="size-filter-percent" type="number" min="0.01" max="1000" step="any" value="50" aria-label="생성 크기 제한, 카메라 반경 대비 퍼센트" disabled> %</label></div>
+<p class="helper">촬영 위치 반경 대비 가장 긴 축의 표준편차.<br>값이 작을수록 더 많이 지웁니다. 바닥 보호보다 우선합니다.</p>
+</div>
+<button id="save-plan" class="button secondary full" disabled>선택한 설정 저장 <span>↓</span></button><button id="generate" class="button primary full" disabled>Gaussian PLY 생성 <span>↗</span></button><p id="generation-note" class="helper">생성 엔진 연결 상태를 확인하고 있습니다.</p><a id="saved-link" class="saved-link" hidden>저장한 설정 다운로드 ↗</a></div>
+</aside>
+<section class="canvas-column">
+<div class="map-panel panel"><div class="panel-topline"><div class="panel-title"><span class="tiny-dot"></span> 수집 영역 <span id="map-radius-label" class="subtle">중심 위치 미선택</span></div><button id="fit-area" class="text-button" disabled>선택 영역으로 이동 ↗</button></div><div id="map" aria-label="수집 범위를 선택할 지도"></div><div id="map-prompt" class="map-prompt"><span class="crosshair">⌖</span><div><strong>어디를 공간으로 만들까요?</strong><p>지도를 확대하고 중심 위치를 클릭하세요.</p></div></div><div class="map-legend"><span><i class="legend-circle selected"></i> 학습 포함</span><span><i class="legend-circle excluded"></i> 학습 제외</span><span><i class="legend-circle"></i> 미선택</span><span id="map-status">아직 조회하지 않았습니다</span></div></div>
+<div id="warning-banner" class="warning-banner" role="status" hidden></div>
+<div class="bottom-grid">
+<section class="preview-panel panel"><div class="panel-topline"><div class="panel-title">거리뷰 미리보기 <span class="small-tag">360°</span></div><div class="preview-actions"><a id="naver-roadview" class="button compact secondary" target="_blank" rel="noopener noreferrer" aria-disabled="true" tabindex="-1" title="선택한 촬영본을 네이버 거리뷰 새 탭에서 열기">네이버에서 열기 ↗</a><button id="preview-fullscreen" class="icon-button" title="미리보기 전체 화면" aria-label="미리보기 전체 화면" disabled>⛶</button></div></div><div id="preview-stage" class="preview-stage"><canvas id="panorama-canvas" tabindex="0" aria-label="마우스로 드래그하고 휠로 확대하는 거리뷰 미리보기"></canvas><img id="flat-preview" alt="선택한 방향의 실제 거리뷰" hidden><div id="preview-placeholder" class="preview-placeholder"><span>◉</span><strong>촬영 지점을 둘러보세요</strong><p>지도나 목록에서 지점을 클릭하면<br>실제 거리뷰가 표시됩니다.</p></div><div id="preview-loading" class="preview-loading" hidden><span class="spinner"></span> 거리뷰를 불러오는 중</div><div id="preview-controls" class="preview-controls" hidden><span>드래그하여 회전 · 휠로 확대</span><div><button id="zoom-in" aria-label="미리보기 확대">＋</button><button id="zoom-out" aria-label="미리보기 축소">−</button><button id="reset-view" aria-label="미리보기 방향 초기화">↺</button></div></div><div id="fallback-faces" class="fallback-faces" hidden></div></div><div class="preview-caption"><div><strong id="preview-title">선택된 거리뷰 없음</strong><p id="preview-meta">실제 거리뷰 · 저해상도 미리보기</p></div><button id="toggle-preview-selection" class="button compact secondary" disabled>학습에 포함</button></div></section>
+<section class="jobs-panel panel"><div class="panel-topline"><div class="panel-title">작업 기록 <span id="job-count" class="count-badge">0</span></div><button id="refresh-jobs" class="text-button">새로고침 ↻</button></div><div id="job-list" class="job-list"><div class="jobs-empty"><div class="stack-symbol">▱<br>▱<br>▱</div><strong>아직 생성 작업이 없습니다</strong><p>촬영 지점과 조건을 선택한 뒤<br>설정을 저장하거나 생성을 시작하세요.</p></div></div><div class="jobs-footnote"><span class="tiny-dot"></span> 완료된 작업에서 PLY를 다운로드할 수 있습니다.</div></section>
+</div>
+</section>
+</main>
+<section class="existing-ply-panel panel" aria-labelledby="existing-ply-title">
+<div class="panel-topline"><h2 id="existing-ply-title">기존 PLY 정리</h2><span class="subtle">재학습 없이 크기 필터 적용</span></div>
+<div class="existing-ply-body">
+<form id="ply-filter-form" class="ply-filter-form">
+<label class="path-label">PLY 파일 경로<input id="ply-filter-source" type="text" spellcheck="false" autocomplete="off" placeholder="이 컴퓨터에 저장된 PLY의 전체 경로" required></label>
+<label class="path-label">카메라 JSON 경로<input id="ply-filter-cameras" type="text" spellcheck="false" autocomplete="off" placeholder="같은 좌표계의 transforms JSON 전체 경로" required></label>
+<div class="cleanup-options"><label class="check-label"><input id="ply-size-enabled" type="checkbox" checked>큰 가우시안 제거</label><label class="check-label"><input id="ply-crop-enabled" type="checkbox">출력 범위 자르기</label><label class="size-percent">출력 반경 <input id="ply-crop-percent" type="number" min="0.01" max="1000" step="any" value="100" disabled aria-label="출력 반경, 촬영 위치 반경 대비 퍼센트"> %</label></div><p class="helper">출력 반경은 촬영 위치 중심을 기준으로 합니다. 높이는 그대로 유지하며, 끄면 전체 범위를 내보냅니다.</p>
+<div class="filter-submit-row"><label class="size-percent">크기 제한 <input id="ply-filter-percent" type="number" min="0.01" max="1000" step="any" value="50" aria-label="기존 PLY 크기 제한, 카메라 반경 대비 퍼센트" required> %</label><button id="ply-filter-submit" type="submit" class="button primary" disabled>정리 PLY 만들기</button></div>
+<p class="helper">촬영 위치 반경 대비 가장 긴 축의 표준편차입니다. 값이 작을수록 더 많이 지우며 바닥 보호보다 우선합니다. 원본 파일은 보관하고 새 PLY로 저장합니다.</p>
+<p id="ply-filter-note" class="helper" role="status">정리 기능 연결 상태를 확인하고 있습니다.</p>
+</form>
+<div id="ply-filter-jobs" class="ply-filter-jobs" aria-live="polite"><p class="helper">아직 정리한 PLY가 없습니다.</p></div>
+</div>
+</section>
+<section class="unreal-status-panel panel" hidden id="unreal-status-panel"><div class="panel-topline"><h2>언리얼 열기</h2><span id="unreal-availability" class="subtle"></span></div><div id="unreal-open-jobs" class="unreal-open-jobs"></div></section>
+<dialog id="reuse-dialog"><form method="dialog" class="dialog-header"><h2>완료한 단계 재사용</h2><button class="icon-button" aria-label="닫기">×</button></form><p class="helper">검증된 중간 결과를 새 작업으로 가져옵니다. 기존 작업은 보관합니다.</p><select id="reuse-stage" aria-label="다시 실행할 단계"></select><p id="reuse-note" class="helper" role="status"></p><div class="dialog-actions"><button id="reuse-start" type="button" class="button primary" disabled>이 단계부터 새 작업</button></div></dialog>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div><noscript><div class="noscript">이 화면을 사용하려면 JavaScript를 활성화해 주세요.</div></noscript>
+<script src="/workflow.js" defer></script>
+</body></html>

@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "streetview-to-ply"
+version = "0.1.0"
+description = "Map-based streetview selection and Gaussian PLY generation"
+readme = "README.md"
+requires-python = ">=3.11"
+dynamic = ["dependencies"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<10", "opencv-python-headless>=4.10,<6", "plyfile>=1.1,<2"]
+
+[project.scripts]
+streetview-gui = "tools.streetview_app.launch:main"
+streetview-server = "tools.streetview_app.server:main"
+streetview = "tools.streetview_app.workflow_cli:main"
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["tools/streetview_app/requirements.txt"]}
+
+[tool.setuptools.packages.find]
+include = ["tools*"]
+exclude = ["*.tests", "*.tests.*"]
+
+[tool.setuptools.package-data]
+"tools.streetview_app" = ["static/*.html", "static/*.css", "static/*.js"]
+
+[tool.pytest.ini_options]
+testpaths = ["tools/streetview_app/tests", "tools/streetview_engine/tests", "tools/streetview_geometry/tests"]
+addopts = "--import-mode=importlib"

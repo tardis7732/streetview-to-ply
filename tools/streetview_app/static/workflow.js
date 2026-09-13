@@ -1,0 +1,49 @@
+'use strict';
+(() => {
+  const $=id=>document.getElementById(id), studio=window.streetviewStudio;
+  const state={recipes:[],selected:null,ready:false,unreal:null,reuse:null,busy:false};
+  const advanced={training_steps:'training-steps',resolution:'training-resolution',max_splats:'training-splats'};
+  const labels={collect:'촬영 자료 수집부터',preprocess:'이미지 가공부터',sfm:'카메라·형상 복원부터',train:'Gaussian 학습부터',export:'PLY 내보내기부터'};
+  function text(id,value){$(id).textContent=value||'';}
+  function element(tag,cls,value){const node=document.createElement(tag);if(cls)node.className=cls;if(value)node.textContent=value;return node;}
+  function notify(value,error=false){studio?.toast(value,error);}
+  async function api(url,options={}){const response=await fetch(url,{cache:'no-store',...options,headers:{'Content-Type':'application/json',...options.headers}});const result=await response.json();if(!response.ok)throw new Error(result.error||`요청 실패 (${response.status})`);return result;}
+  function advancedSettings(){const result={};for(const [key,id] of Object.entries(advanced)){const n=Number($(id).value);if(!Number.isInteger(n)||!$(id).checkValidity())throw new Error('고급 설정의 숫자 범위를 확인해 주세요.');result[key]=n;}return result;}
+  const multiRecipe=recipe=>(recipe.settings?.generation_mode||recipe.generation_mode||recipe.config?.generation_mode||'multi_view')==='multi_view';
+  const singleJob=job=>(job.config?.generation_mode||job.generation_mode)==='single_panorama';
+  function applyRecipe(){
+    const requested=$('recipe-select').value;
+    state.selected=state.recipes.find(row=>row.id===requested&&multiRecipe(row))||null;
+    if(requested&&!state.selected){$('recipe-select').value='';notify('주변 공간 프리셋만 선택할 수 있습니다.',true);}
+    const recipe=state.selected;
+    if(recipe){const settings={...(recipe.settings||{})};if(!settings.depth_cleanup&&recipe.depth_cleanup?.available)settings.depth_cleanup={enabled:recipe.depth_cleanup.default_enabled};studio?.applySettings(settings);for(const [key,id] of Object.entries(advanced))if(recipe.settings?.[key]!=null)$(id).value=recipe.settings[key];}
+    for(const id of Object.values(advanced))$(id).disabled=!!recipe;
+    $('recipe-image').hidden=true;$('recipe-image').removeAttribute('src');$('recipe-image-empty').hidden=false;
+    text('recipe-image-empty',recipe?'이 프리셋에 등록된 대표 이미지가 없습니다.':'프리셋의 대표 이미지가 여기에 표시됩니다.');
+    if(recipe?.preview_url){$('recipe-image').src=recipe.preview_url;}
+    text('recipe-image-caption',recipe?`${recipe.name} · 대표 참고 이미지`:'대표 참고 이미지 · 새 작업의 결과 미리보기가 아닙니다.');
+    text('recipe-note',recipe?(recipe.executable?'저장된 제작 설정을 사용합니다. 촬영 위치는 지도에서 선택해 주세요.':(recipe.unavailable_reasons?.join(' · ')||'현재 생성 엔진에 연결되지 않은 참고 프리셋입니다.')):'현재 화면의 설정으로 생성합니다. 프리셋을 저장하려면 촬영 지점을 먼저 선택해 주세요.');
+    $('save-recipe').disabled=!!recipe&&!recipe.executable;
+    if(recipe?.executable&&recipe.description)text('recipe-note',recipe.description);
+    studio?.refreshControls();
+  }
+  async function refreshRecipes(){try{const result=await api('/api/recipes');state.recipes=(result.recipes||[]).filter(multiRecipe);state.ready=true;const selected=$('recipe-select').value;$('recipe-select').replaceChildren(new Option('현재 설정',''));for(const recipe of state.recipes)$('recipe-select').add(new Option(recipe.name+(recipe.executable?'':' · 참고'),recipe.id));if(state.recipes.some(r=>r.id===selected))$('recipe-select').value=selected;else if(!state.loaded&&state.recipes.some(r=>r.id===result.default_recipe_id))$('recipe-select').value=result.default_recipe_id;state.loaded=true;applyRecipe();}catch(error){state.ready=false;text('recipe-note','프리셋 연결 상태를 확인해 주세요.');}}
+  async function saveRecipe(){try{const name=$('recipe-name').value.trim();if(!name)throw new Error('프리셋 이름을 입력해 주세요.');const config=studio.getConfig();delete config.recipe_id;$('save-recipe').disabled=true;const result=await api('/api/recipes',{method:'POST',body:JSON.stringify({name,config,...(state.selected?{base_recipe_id:state.selected.id}:{})})});await refreshRecipes();$('recipe-select').value=result.recipe.id;applyRecipe();notify('제작 프리셋을 저장했습니다.');}catch(error){notify(error.message,true);}finally{$('save-recipe').disabled=!!state.selected&&!state.selected.executable;}}
+  async function openUnreal(kind,job_id,button){button.disabled=true;try{await api('/api/unreal-opens',{method:'POST',body:JSON.stringify({kind,job_id})});$('unreal-status-panel').hidden=false;await refreshUnreal();notify('언리얼에서 여는 중입니다.');}catch(error){notify(error.message,true);}finally{button.disabled=false;}}
+  async function setupCleanup(kind,job_id,button){button.disabled=true;try{const result=await api('/api/artifacts/resolve',{method:'POST',body:JSON.stringify({kind,job_id})});studio.setCleanupInputs(result);notify('완료된 PLY를 불러왔습니다. 필요한 정리 옵션을 선택해 주세요.');}catch(error){notify(error.message,true);}finally{button.disabled=false;}}
+  async function inspectReuse(job_id){state.reuse={job_id,loading:true};$('reuse-stage').replaceChildren();$('reuse-start').disabled=true;text('reuse-note','중간 결과의 해시와 설정을 확인하고 있습니다.');$('reuse-dialog').showModal();try{const info=await api(`/api/jobs/${encodeURIComponent(job_id)}/reuse`);state.reuse={job_id,info};const stages=(info.stages||[]).filter(item=>item.available);for(const item of stages){const name=item.from_stage;if(name)$('reuse-stage').add(new Option(labels[name]||name,name));}$('reuse-start').disabled=!stages.length;text('reuse-note',stages.length?'선택한 단계부터 새로 실행합니다. 완료된 이전 단계만 재사용합니다.':([...new Set((info.stages||[]).map(item=>item.reason).filter(Boolean))]||[info.reason||'재사용할 수 있는 완료 단계가 없습니다.']).join(' · '));}catch(error){text('reuse-note',error.message);}}
+  async function startReuse(){if(!state.reuse||!$('reuse-stage').value)return;$('reuse-start').disabled=true;try{await api(`/api/jobs/${encodeURIComponent(state.reuse.job_id)}/reuse`,{method:'POST',body:JSON.stringify({from_stage:$('reuse-stage').value})});$('reuse-dialog').close();notify('완료한 단계를 재사용하는 새 작업을 시작했습니다.');await studio.refresh();}catch(error){text('reuse-note',error.message);$('reuse-start').disabled=false;}}
+  function decorateJob(card,job,kind){if(card.querySelector('[data-workflow-actions]'))return;const actions=card.querySelector('.job-actions')||card.appendChild(element('div','job-actions'));const group=element('span','workflow-actions');group.dataset.workflowActions='true';if(job.status==='completed'&&job.artifact){const cleanup=element('button','','범위·크기 정리');cleanup.addEventListener('click',()=>setupCleanup(kind,job.id,cleanup));group.append(cleanup);const open=element('button','','언리얼에서 열기');open.disabled=state.unreal?.capability?.available!==true;open.title=state.unreal?.capability?.reason||'';open.addEventListener('click',()=>openUnreal(kind,job.id,open));group.append(open);}if(kind==='generation'&&!singleJob(job)&&!['queued','running','cancelling'].includes(job.status)){const reuse=element('button','','단계 재사용');reuse.addEventListener('click',()=>inspectReuse(job.id));group.append(reuse);}actions.append(group);}
+  async function refreshUnreal(){try{const response=await api('/api/unreal-opens');state.unreal=response;text('unreal-availability',response.capability?.available?'연결됨':response.capability?.reason||'연결되지 않음');const jobs=response.jobs||[];$('unreal-status-panel').hidden=!jobs.length;$('unreal-open-jobs').replaceChildren();for(const job of jobs.slice(0,5)){const row=element('div','unreal-open-row');const status={queued:'대기 중',running:'여는 중',completed:'열림',failed:'실패',interrupted:'중단됨'}[job.status]||job.status;row.append(element('strong','',status),element('span','',job.map||job.package||job.label||job.id.slice(0,8)));if(job.error)row.append(element('p','helper',job.error));$('unreal-open-jobs').append(row);}for(const card of document.querySelectorAll('[data-job-kind]')){const jobsForKind=studio?.jobs?.()[card.dataset.jobKind]||[];const job=jobsForKind.find(j=>j.id===card.dataset.jobId);if(job){card.querySelector('[data-workflow-actions]')?.remove();decorateJob(card,job,card.dataset.jobKind);}}}catch(_){state.unreal={capability:{available:false,reason:'언리얼 연결 상태를 확인해 주세요.'},jobs:[]};}}
+  window.streetviewWorkflow={decorateJob,
+    depthCleanupCapability(){return state.selected?(state.selected.depth_cleanup||{available:false,default_enabled:false}):null;},
+    lockRecipeControls(){document.querySelector('.advanced-options').hidden=false;if(state.selected)for(const id of ['remove-sky','mask-dynamic','size-filter-enabled','size-filter-percent'])$(id).disabled=true;},
+    generationReady(){if(state.selected)return multiRecipe(state.selected)&&state.selected.executable===true;try{advancedSettings();return true;}catch(_){return false;}},
+    generationReason(){if(state.selected)return multiRecipe(state.selected)?state.selected.unavailable_reasons?.join(' · '):'주변 공간 프리셋만 사용할 수 있습니다.';try{advancedSettings();}catch(error){return error.message;}},
+    extendConfig(config){if((config.generation_mode&&config.generation_mode!=='multi_view')||(state.selected&&!multiRecipe(state.selected)))throw new Error('주변 공간 생성만 사용할 수 있습니다.');const extended={...config,...advancedSettings(),generation_mode:'multi_view'};if(state.selected)extended.recipe_id=state.selected.id;return extended;}
+  };
+  $('recipe-select').addEventListener('change',applyRecipe);$('save-recipe').addEventListener('click',saveRecipe);$('reuse-start').addEventListener('click',startReuse);
+  $('recipe-image').addEventListener('load',()=>{$('recipe-image').hidden=false;$('recipe-image-empty').hidden=true;});$('recipe-image').addEventListener('error',()=>{$('recipe-image').hidden=true;$('recipe-image-empty').hidden=false;});
+  for(const id of Object.values(advanced))$(id).addEventListener('input',()=>studio?.refreshControls());
+  refreshRecipes();refreshUnreal();setInterval(()=>{if(!document.hidden)refreshUnreal();},5000);
+})();

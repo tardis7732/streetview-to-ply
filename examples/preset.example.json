@@ -1,0 +1,21 @@
+{
+  "name": "Streetview standard",
+  "description": "Native cube masks, panorama object removal, SfM-seeded Brush and depth-regularized refinement, optional depth cleanup, and Gaussian size filtering.",
+  "settings": {
+    "generation_mode": "multi_view",
+    "training_steps": 6000,
+    "resolution": 1280,
+    "max_splats": 2000000,
+    "processing_options": {
+      "remove_sky": false,
+      "mask_dynamic": true
+    },
+    "size_filter": {
+      "enabled": true,
+      "max_sigma_camera_radius_ratio": 0.5
+    },
+    "depth_cleanup": {
+      "enabled": true
+    }
+  }
+}

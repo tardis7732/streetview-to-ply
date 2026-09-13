@@ -1,0 +1,13 @@
+# Core Linux reconstruction environment. Install the CUDA-compatible PyTorch
+# build for your host first; this file deliberately does not replace it.
+# Model inference environments are separate; see docs/GPU_SETUP.md.
+-r tools/streetview_app/requirements.txt
+numpy>=1.26,<3
+scipy>=1.13,<2
+opencv-python-headless>=4.10,<6
+pycolmap==4.2.0
+plyfile>=1.1,<2
+gsplat==1.5.3
+ninja>=1.11
+safetensors>=0.4,<1
+omegaconf>=2.3,<3
