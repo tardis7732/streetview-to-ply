@@ -27,7 +27,15 @@ GUI 설치 후 지도 탐색과 선택 저장을 사용할 수 있습니다. **P
 <a id="pipeline"></a>
 ## 처리 과정
 
-![촬영본 선택 → 큐브 면에서 객체 마스크 → 전체 파노라마 리무브 → 원본 큐브에 마스크 합성 → SfM·Brush·gsplat 학습 → 깊이·크기 정리와 PLY 내보내기](docs/assets/pipeline.ko.svg)
+실제 광화문 작업 화면입니다. 이미지를 클릭하면 크게 볼 수 있습니다.
+
+| 01 · 큐브맵 | 02 · 파노라마 | 03 · 인물·차량 제거 |
+| --- | --- | --- |
+| [<img src="https://github.com/user-attachments/assets/edf01d1c-fe16-4825-b834-6bcddaea7a89" width="280" alt="큐브맵">](https://github.com/user-attachments/assets/edf01d1c-fe16-4825-b834-6bcddaea7a89)<br>원본 거리뷰 6면 | [<img src="https://github.com/user-attachments/assets/704acb6d-991b-4cfc-8e25-83691032aa4d" width="280" alt="파노라마">](https://github.com/user-attachments/assets/704acb6d-991b-4cfc-8e25-83691032aa4d)<br>6면을 전체 ERP로 변환 | [<img src="https://github.com/user-attachments/assets/6b999932-2172-4f0c-80cb-d7d861989b26" width="280" alt="인물·차량 제거">](https://github.com/user-attachments/assets/6b999932-2172-4f0c-80cb-d7d861989b26)<br>파노라마에서 리무브 |
+
+| 04 · Gaussian 생성 | 05 · 깊이맵 | 06 · 최종 결과 |
+| --- | --- | --- |
+| [<img src="https://github.com/user-attachments/assets/32a5fbde-fef4-485a-9287-c1f1835d571d" width="280" alt="Gaussian 생성">](https://github.com/user-attachments/assets/32a5fbde-fef4-485a-9287-c1f1835d571d)<br>SfM → Brush → gsplat | [<img src="https://github.com/user-attachments/assets/c94412cc-f265-4ded-ab31-b50e856dbc76" width="280" alt="깊이맵">](https://github.com/user-attachments/assets/c94412cc-f265-4ded-ab31-b50e856dbc76)<br>부유물 정리에 사용한 깊이 | [<img src="https://github.com/user-attachments/assets/200ff4a5-6cf7-40d8-9237-ed9a39a6ca42" width="280" alt="최종 결과">](https://github.com/user-attachments/assets/200ff4a5-6cf7-40d8-9237-ed9a39a6ca42)<br>정리한 PLY 렌더 |
 
 객체는 큐브 면에서 찾고, 제거는 전체 파노라마에서 처리합니다. 원본 큐브에 마스크 영역만 합성한 뒤 여러 촬영 지점으로 공간을 복원합니다.
 

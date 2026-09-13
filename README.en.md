@@ -27,7 +27,15 @@ After installing the GUI, you can browse the map and save a selection. **PLY gen
 <a id="pipeline"></a>
 ## Pipeline
 
-![Select captures → mask objects on cube faces → remove in full panoramas → composite masked areas onto native cubes → train with SfM, Brush and gsplat → depth/size cleanup and PLY export](docs/assets/pipeline.en.svg)
+Actual frames from our Gwanghwamun workflow. Click an image to view it full size.
+
+| 01 · Cubemap | 02 · Panorama | 03 · Object removal |
+| --- | --- | --- |
+| [<img src="https://github.com/user-attachments/assets/edf01d1c-fe16-4825-b834-6bcddaea7a89" width="280" alt="Cubemap">](https://github.com/user-attachments/assets/edf01d1c-fe16-4825-b834-6bcddaea7a89)<br>Six source streetview faces | [<img src="https://github.com/user-attachments/assets/704acb6d-991b-4cfc-8e25-83691032aa4d" width="280" alt="Panorama">](https://github.com/user-attachments/assets/704acb6d-991b-4cfc-8e25-83691032aa4d)<br>Convert cube faces to full ERP | [<img src="https://github.com/user-attachments/assets/6b999932-2172-4f0c-80cb-d7d861989b26" width="280" alt="Object removal">](https://github.com/user-attachments/assets/6b999932-2172-4f0c-80cb-d7d861989b26)<br>Remove people and vehicles in ERP |
+
+| 04 · Gaussian reconstruction | 05 · Depth map | 06 · Final result |
+| --- | --- | --- |
+| [<img src="https://github.com/user-attachments/assets/32a5fbde-fef4-485a-9287-c1f1835d571d" width="280" alt="Gaussian reconstruction">](https://github.com/user-attachments/assets/32a5fbde-fef4-485a-9287-c1f1835d571d)<br>SfM → Brush → gsplat | [<img src="https://github.com/user-attachments/assets/c94412cc-f265-4ded-ab31-b50e856dbc76" width="280" alt="Depth map">](https://github.com/user-attachments/assets/c94412cc-f265-4ded-ab31-b50e856dbc76)<br>Depth used to support cleanup | [<img src="https://github.com/user-attachments/assets/200ff4a5-6cf7-40d8-9237-ed9a39a6ca42" width="280" alt="Final result">](https://github.com/user-attachments/assets/200ff4a5-6cf7-40d8-9237-ed9a39a6ca42)<br>Render of the cleaned PLY |
 
 Detect objects on cube faces, remove them in full panoramas, and composite only masked regions back onto the native cubes. Reconstruct the scene from multiple capture stations.
 
