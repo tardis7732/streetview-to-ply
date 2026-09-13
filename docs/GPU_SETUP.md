@@ -1,8 +1,10 @@
-# Local GPU setup
+# GPU setup: local or remote
 
-Run the GUI and generation on the same NVIDIA GPU computer. Use Linux, or
-WSL2 on Windows, for the current reconstruction recipe. Run the commands below
-inside that Linux environment. No SSH server, key, or cloud account is needed.
+Choose either a local NVIDIA GPU or a remote NVIDIA GPU server. The local
+option runs the GUI and generation on the same Linux / WSL2 computer, with no
+SSH setup. The remote option keeps the GUI on your computer and runs generation
+on a Linux server over SSH. Install the GPU dependencies below in the selected
+execution environment.
 
 Windows users can run the basic GUI directly for browsing; for generation,
 start the GUI inside WSL2 and open its localhost address in the Windows browser.

@@ -4,13 +4,13 @@
 
 [한국어](README.md) · [English](README.en.md)
 
-`Map-based GUI` `Streetview → 3DGS` `SfM + Brush + gsplat` `Gaussian PLY` `Local NVIDIA GPU`
+`Map-based GUI` `Streetview → 3DGS` `SfM + Brush + gsplat` `Gaussian PLY` `Local / Remote NVIDIA GPU`
 
 https://github.com/user-attachments/assets/5741d2f6-f14d-4e28-a2ff-5271d8f54f56
 
 **Streetview to PLY**는 지도에서 중심과 반경을 정하고, 실제 촬영본을 확인한 뒤 여러 촬영 지점으로부터 **Gaussian PLY**를 만드는 로컬 GUI와 CLI입니다. 현재 거리뷰 입력은 네이버를 사용합니다. 인물·차량 제거, SfM 카메라 복원, Gaussian 학습, 부유물 정리와 내보내기를 하나의 작업 흐름으로 연결합니다.
 
-PLY 생성은 **같은 PC의 NVIDIA GPU**를 사용합니다. 생성 환경은 Linux 또는 Windows의 WSL2에 설치합니다. [로컬 GPU 설치 안내](docs/GPU_SETUP.md)를 따라 설정하세요.
+PLY 생성은 **로컬 PC의 GPU와 원격 서버의 GPU를 모두 지원**합니다. 로컬은 Linux 또는 Windows의 WSL2에서 실행하며, SSH는 원격 서버를 선택할 때만 필요합니다. [GPU 설치 안내](docs/GPU_SETUP.md)에서 실행 환경을 선택하세요.
 
 [활용](#uses) · [처리 과정](#pipeline) · [준비 사항](#requirements) · [설치](#installation) · [사용법](#usage) · [결과와 옵션](#outputs) · [CLI](#cli) · [한계](#limits) · [참고](#references)
 
@@ -58,7 +58,7 @@ PLY 생성은 **같은 PC의 NVIDIA GPU**를 사용합니다. 생성 환경은 L
 | --- | --- |
 | 로컬 GUI | Python 3.11 이상, Git, 최신 웹 브라우저. 아래 설치 예시는 Windows PowerShell 기준입니다. |
 | 지도·거리뷰 | 인터넷 연결과 해당 지역에서 실제 제공되는 거리뷰 촬영본. |
-| PLY 생성 | 같은 PC의 Linux / WSL2, NVIDIA CUDA, Python 환경, Brush 0.3, PyCOLMAP, gsplat, 이미지·깊이 모델. [GPU 설치 안내](docs/GPU_SETUP.md) 참조. |
+| PLY 생성 | Linux / WSL2 로컬 PC 또는 Linux 원격 서버, NVIDIA CUDA, Python 환경, Brush 0.3, PyCOLMAP, gsplat, 이미지·깊이 모델. [GPU 설치 안내](docs/GPU_SETUP.md) 참조. |
 | 기존 PLY 정리 | 지원하는 Gaussian PLY와 **동일 좌표계**의 카메라 JSON. 크기·범위 필터는 재학습 없이 실행합니다. |
 | 언리얼 미리보기 · 선택 | Unreal Editor, MLSLabsRenderer와 필요한 편집기 플러그인이 활성화된 기존 프로젝트. PLY 내보내기에는 필요하지 않습니다. |
 
@@ -82,7 +82,7 @@ PLY 생성은 **같은 PC의 NVIDIA GPU**를 사용합니다. 생성 환경은 L
 
    설치 후에는 `Start Streetview.vbs`를 두 번 클릭해도 됩니다. 기본 주소는 `http://127.0.0.1:8765/`이며, 포트가 사용 중이면 빈 로컬 포트를 선택합니다.
 
-3. **로컬 생성 환경을 설정합니다.** [GPU 설치 안내](docs/GPU_SETUP.md)에 따라 같은 PC에 GPU 환경과 모델을 준비한 뒤 [운영자 설정](docs/CONFIGURATION.md)에 따라 백엔드와 프리셋을 등록하고 GUI를 다시 엽니다. 새 설치에서 생성 버튼이 비활성화되는 것은 정상입니다. 지도 탐색과 선택 저장은 연결 전에도 사용할 수 있습니다.
+3. **실행 환경을 선택합니다.** [GPU 설치 안내](docs/GPU_SETUP.md)에 따라 로컬 PC 또는 원격 서버에 GPU 환경과 모델을 준비한 뒤 [운영자 설정](docs/CONFIGURATION.md)에 따라 백엔드와 프리셋을 등록하고 GUI를 다시 엽니다. 새 설치에서 생성 버튼이 비활성화되는 것은 정상입니다. 지도 탐색과 선택 저장은 연결 전에도 사용할 수 있습니다.
 
 <details>
 <summary>Linux / macOS에서 로컬 GUI 실행</summary>

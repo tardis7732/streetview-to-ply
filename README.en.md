@@ -4,13 +4,13 @@
 
 [한국어](README.md) · [English](README.en.md)
 
-`Map-based GUI` `Streetview → 3DGS` `SfM + Brush + gsplat` `Gaussian PLY` `Local NVIDIA GPU`
+`Map-based GUI` `Streetview → 3DGS` `SfM + Brush + gsplat` `Gaussian PLY` `Local / Remote NVIDIA GPU`
 
 https://github.com/user-attachments/assets/5741d2f6-f14d-4e28-a2ff-5271d8f54f56
 
 **Streetview to PLY** is a local GUI and CLI for selecting a map center and radius, inspecting real captures, and reconstructing **Gaussian PLY** from multiple capture stations. The current streetview provider is NAVER. The workflow connects people/vehicle removal, SfM camera recovery, Gaussian training, artifact cleanup, and export.
 
-PLY generation uses the **NVIDIA GPU on your own PC**. Install the generation environment in Linux or WSL2 on Windows; follow [Local GPU setup](docs/GPU_SETUP.md).
+PLY generation supports **both a local GPU and a remote GPU server**. Local generation runs in Linux or WSL2 on Windows; SSH is required only when you choose a remote server. Choose your execution environment in [GPU setup](docs/GPU_SETUP.md).
 
 [Uses](#uses) · [Pipeline](#pipeline) · [Requirements](#requirements) · [Installation](#installation) · [Usage](#usage) · [Outputs and options](#outputs) · [CLI](#cli) · [Limitations](#limits) · [References](#references)
 
@@ -58,7 +58,7 @@ The default recipe uses a 2048 × 1024 FLUX input and training images with a max
 | --- | --- |
 | Local GUI | Python 3.11 or newer, Git, and a current web browser. The primary instructions below use Windows PowerShell. |
 | Map and streetview | Internet access and actual streetview coverage for the selected area. |
-| PLY generation | Linux / WSL2 on the same PC, NVIDIA CUDA, Python environments, Brush 0.3, PyCOLMAP, gsplat, and image/depth models. See [GPU setup](docs/GPU_SETUP.md). |
+| PLY generation | A local Linux / WSL2 PC or a remote Linux server, NVIDIA CUDA, Python environments, Brush 0.3, PyCOLMAP, gsplat, and image/depth models. See [GPU setup](docs/GPU_SETUP.md). |
 | Existing PLY cleanup | A supported Gaussian PLY and camera JSON in the **same coordinate system**. Size filtering and cropping require no retraining. |
 | Unreal preview · optional | Unreal Editor, MLSLabsRenderer, and an existing project with the required editor plugins enabled. PLY export does not require Unreal. |
 
@@ -82,7 +82,7 @@ The default recipe uses a 2048 × 1024 FLUX input and training images with a max
 
    After installation, you can also double-click `Start Streetview.vbs`. The default address is `http://127.0.0.1:8765/`; the launcher chooses a free local port if that port is occupied.
 
-3. **Configure local generation.** Follow [GPU setup](docs/GPU_SETUP.md) to prepare the GPU environment and models on the same PC, then [Configuration](docs/CONFIGURATION.md) to register the backend and a preset. Restart the GUI afterward. A disabled generation button is expected on a fresh installation. Map browsing and selection saving remain available before connection.
+3. **Choose an execution environment.** Follow [GPU setup](docs/GPU_SETUP.md) to prepare the GPU environment and models on your local PC or remote server, then [Configuration](docs/CONFIGURATION.md) to register the backend and a preset. Restart the GUI afterward. A disabled generation button is expected on a fresh installation. Map browsing and selection saving remain available before connection.
 
 <details>
 <summary>Run the local GUI on Linux / macOS</summary>

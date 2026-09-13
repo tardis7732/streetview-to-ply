@@ -2,7 +2,7 @@
 
 The GUI can browse the map, preview streetview, select captures, and save a selection before a GPU backend is configured. Generating a PLY is an explicit action. Opening the GUI or registering a preset does not start collection or training.
 
-Follow [Local GPU setup](GPU_SETUP.md) to prepare models and tools on the same Linux / WSL2 computer. The default backend runs local Python stages.
+Both local and remote GPUs are supported. Follow [GPU setup](GPU_SETUP.md) to prepare models and tools in the chosen environment. `--local` runs on the same Linux / WSL2 computer (the default); `--host YOUR_ALIAS` uses a remote Linux GPU over SSH. The steps below cover local setup, followed by the remote option.
 
 ## Start the GUI
 
