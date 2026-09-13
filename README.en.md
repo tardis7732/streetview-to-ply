@@ -8,8 +8,6 @@
 
 https://github.com/user-attachments/assets/5741d2f6-f14d-4e28-a2ff-5271d8f54f56
 
-*21 seconds · 1920 × 1080 · silent. Existing Gwanghwamun test results, starting with an Unreal flight, followed by actual NAVER streetview, cube-face and panorama processing, Gaussian reconstruction, depth cleanup, and a result flythrough. This is an edited demonstration, not the full processing time.*
-
 **Streetview to PLY** is a local GUI and CLI for selecting a map center and radius, inspecting real captures, and reconstructing **Gaussian PLY** from multiple capture stations. The current streetview provider is NAVER. The workflow connects people/vehicle removal, SfM camera recovery, Gaussian training, artifact cleanup, and export.
 
 After installing the GUI, you can browse the map and save a selection. **PLY generation requires a separately configured Linux NVIDIA GPU environment, models, and tools.** Collection, image processing, SfM, and training run in sequence; duration depends on station count, image resolution, network, and GPU. The published source has not yet been run through a complete generation on a freshly installed GPU host.
@@ -29,20 +27,12 @@ After installing the GUI, you can browse the map and save a selection. **PLY gen
 <a id="pipeline"></a>
 ## Pipeline
 
-```mermaid
-flowchart TD
-    A[Select captures on the map] --> B[Six native cube faces per station]
-    B --> C[SAM3 masks + RT-DETRv2 verification]
-    C --> D[Project masks into a full ERP panorama]
-    D --> E[FLUX people and vehicle removal]
-    E --> F[Composite only masked areas on native cube grids]
-    F --> G[SfM cameras + triangulated seed points]
-    G --> H[Brush 0.3 · 40,000 steps]
-    H --> I[gsplat · 6,000 steps + sparse SfM depth]
-    I --> J[Optional: DA3 depth and sky cleanup]
-    J --> K[Optional: oversized Gaussian filter]
-    K --> L[Gaussian PLY]
-```
+![Select captures → mask objects on cube faces → remove in full panoramas → composite masked areas onto native cubes → train with SfM, Brush and gsplat → depth/size cleanup and PLY export](docs/assets/pipeline.en.svg)
+
+Detect objects on cube faces, remove them in full panoramas, and composite only masked regions back onto the native cubes. Reconstruct the scene from multiple capture stations.
+
+<details>
+<summary>Stage settings</summary>
 
 - **Preserve the source outside removal masks.** SAM3 and RT-DETRv2 identify objects on native cube faces. Masks are projected into a full 2:1 equirectangular panorama (ERP) for FLUX removal, and the generated result is feathered into masked areas only. RGB outside the mask support stays exactly original. Vehicle shadows are not separately added to the mask.
 - **Recover space from multiple views.** Training starts with SfM cameras and actual triangulated points. Generated regions and sky do not provide SfM correspondences. GPS is an auxiliary position prior.
@@ -50,6 +40,8 @@ flowchart TD
 - **Control cleanup independently.** DA3 depth/sky cleanup and the oversized Gaussian filter have separate switches. DA3 supports cleanup; it is distinct from the SfM depth used during training.
 
 The default recipe uses a 2048 × 1024 FLUX input and training images with a maximum dimension of 1280. Prepared images retain the native cube dimensions; generated areas do not thereby recover native-detail observations. See [Configuration](docs/CONFIGURATION.md) for the complete stage settings.
+
+</details>
 
 <a id="requirements"></a>
 ## Requirements
