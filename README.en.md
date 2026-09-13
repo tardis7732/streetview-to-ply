@@ -4,13 +4,13 @@
 
 [한국어](README.md) · [English](README.en.md)
 
-`Map-based GUI` `Streetview → 3DGS` `SfM + Brush + gsplat` `Gaussian PLY` `Windows GUI / Linux GPU`
+`Map-based GUI` `Streetview → 3DGS` `SfM + Brush + gsplat` `Gaussian PLY` `Local NVIDIA GPU`
 
 https://github.com/user-attachments/assets/5741d2f6-f14d-4e28-a2ff-5271d8f54f56
 
 **Streetview to PLY** is a local GUI and CLI for selecting a map center and radius, inspecting real captures, and reconstructing **Gaussian PLY** from multiple capture stations. The current streetview provider is NAVER. The workflow connects people/vehicle removal, SfM camera recovery, Gaussian training, artifact cleanup, and export.
 
-After installing the GUI, you can browse the map and save a selection. **PLY generation requires a separately configured Linux NVIDIA GPU environment, models, and tools.** Collection, image processing, SfM, and training run in sequence; duration depends on station count, image resolution, network, and GPU. The published source has not yet been run through a complete generation on a freshly installed GPU host.
+PLY generation uses the **NVIDIA GPU on your own PC**. Install the generation environment in Linux or WSL2 on Windows; follow [Local GPU setup](docs/GPU_SETUP.md).
 
 [Uses](#uses) · [Pipeline](#pipeline) · [Requirements](#requirements) · [Installation](#installation) · [Usage](#usage) · [Outputs and options](#outputs) · [CLI](#cli) · [Limitations](#limits) · [References](#references)
 
@@ -58,11 +58,9 @@ The default recipe uses a 2048 × 1024 FLUX input and training images with a max
 | --- | --- |
 | Local GUI | Python 3.11 or newer, Git, and a current web browser. The primary instructions below use Windows PowerShell. |
 | Map and streetview | Internet access and actual streetview coverage for the selected area. |
-| PLY generation | A separate Linux NVIDIA CUDA host, SSH key access, Python environments, Brush 0.3, PyCOLMAP, gsplat, and image/depth models. See [GPU setup](docs/GPU_SETUP.md). |
+| PLY generation | Linux / WSL2 on the same PC, NVIDIA CUDA, Python environments, Brush 0.3, PyCOLMAP, gsplat, and image/depth models. See [GPU setup](docs/GPU_SETUP.md). |
 | Existing PLY cleanup | A supported Gaussian PLY and camera JSON in the **same coordinate system**. Size filtering and cropping require no retraining. |
 | Unreal preview · optional | Unreal Editor, MLSLabsRenderer, and an existing project with the required editor plugins enabled. PLY export does not require Unreal. |
-
-Model weights, GPU environments, Unreal and its plugins, personal SSH settings, streetview photographs, and previous job outputs are not bundled.
 
 <a id="installation"></a>
 ## Installation
@@ -84,7 +82,7 @@ Model weights, GPU environments, Unreal and its plugins, personal SSH settings, 
 
    After installation, you can also double-click `Start Streetview.vbs`. The default address is `http://127.0.0.1:8765/`; the launcher chooses a free local port if that port is occupied.
 
-3. **Connect a generation backend.** Follow [GPU setup](docs/GPU_SETUP.md) to prepare the execution host and models, then [Configuration](docs/CONFIGURATION.md) to register the backend and a preset. Restart the GUI afterward. A disabled generation button is expected on a fresh installation. Map browsing and selection saving remain available before connection.
+3. **Configure local generation.** Follow [GPU setup](docs/GPU_SETUP.md) to prepare the GPU environment and models on the same PC, then [Configuration](docs/CONFIGURATION.md) to register the backend and a preset. Restart the GUI afterward. A disabled generation button is expected on a fresh installation. Map browsing and selection saving remain available before connection.
 
 <details>
 <summary>Run the local GUI on Linux / macOS</summary>
@@ -110,7 +108,7 @@ The current GUI uses Korean labels. The steps below include their English meanin
 1. **Choose a center and radius.** Click the map or enter latitude/longitude. Set `수집 반경` (collection radius), then click `주변 거리뷰 조회` (find nearby streetview). The program imposes no upper limit on radius or capture count.
 2. **Inspect the captures.** Choose an available `동일 날짜` (same day), `동일 월` (same month), or `전체` (all) condition. Click a station on the map or list to inspect its 360° preview. `네이버에서 열기` (open in NAVER) opens the source page. Excluded captures can still be previewed.
 3. **Save your selection and settings.** Choose included captures, a processing preset, and removal/cleanup options. `선택한 설정 저장` (save selection settings) downloads the selection JSON. The default recipe requires at least three distinct physical capture stations.
-4. **Start generation.** Check the connection status and selection, then click `Gaussian PLY 생성` (generate Gaussian PLY). Map queries, previews, and preset saving do not start training. Keep the local GUI server running while it owns a remote job.
+4. **Start generation.** Check the connection status and selection, then click `Gaussian PLY 생성` (generate Gaussian PLY). Map queries, previews, and preset saving do not start training. Keep the GUI server running during generation.
 5. **Review the result.** Check status in `작업 기록` (job history) and download the completed PLY. Open it in a configured Unreal project, or use `기존 PLY 정리` (clean existing PLY) to produce a new filtered output while keeping the original.
 
 Capture metadata retains the precision actually supplied by the provider. A month-only record is not given an invented day or capture time. Provider metadata is checked again before generation. Even a large selection needs sufficient view overlap and successful camera registration.

@@ -1,21 +1,25 @@
-# GPU backend setup
+# Local GPU setup
 
-The desktop GUI and the reconstruction backend are separate installations. A
-fresh checkout can browse the map and save selections. Generation requires an
-operator profile, a Linux CUDA host, installed model weights, and the external
-programs below. This repository does not include those weights or binaries.
-The published source has not been trained end to end on a fresh GPU host.
+Run the GUI and generation on the same NVIDIA GPU computer. Use Linux, or
+WSL2 on Windows, for the current reconstruction recipe. Run the commands below
+inside that Linux environment. No SSH server, key, or cloud account is needed.
+
+Windows users can run the basic GUI directly for browsing; for generation,
+start the GUI inside WSL2 and open its localhost address in the Windows browser.
+The local dispatch path is covered by CPU checks; a fresh local GPU installation
+has not yet completed an end-to-end generation validation.
 
 ## Core reconstruction environment
 
 Use Python 3.11 or 3.12, an NVIDIA driver, a CUDA toolkit/compiler compatible
-with the installed PyTorch build, Git, and SSH/SCP. Install CUDA-enabled PyTorch
+with the installed PyTorch build, and Git. Install CUDA-enabled PyTorch
 for the host first, then install the core packages from the repository root:
 
 ```bash
 python -m venv .venv-gpu
 . .venv-gpu/bin/activate
 # Install the host-compatible PyTorch build before the next command.
+python -m pip install -e .
 python -m pip install -r requirements-gpu.txt
 ```
 
@@ -87,7 +91,27 @@ named panorama/Brush recipe. It never exports predicted Gaussian parameters,
 and it is not a single-panorama generation feature. Installing it is optional
 unless an operator explicitly enables that generic depth-prior path.
 
-## SSH worker
+## Start on your own GPU
+
+After installing the models, fill in their local paths and pin their files using
+[Configuration](CONFIGURATION.md). With the GPU environment active, register
+the local backend and launch the GUI from this checkout:
+
+```bash
+python scripts/configure_backend.py --local --settings .local/operator.json --data-dir tools/streetview_app/data
+python -m tools.streetview_app.launch
+```
+
+The local job runner starts each stage directly with Python. It does not upload
+inputs or invoke a remote worker. If the GUI runs in a separate Python
+environment, pass `--python /absolute/path/to/.venv-gpu/bin/python` when registering.
+Models may still download during their explicit installation, and streetview
+collection still needs internet access.
+
+## Optional remote GPU
+
+<details>
+<summary>Use a separate SSH worker instead</summary>
 
 Choose a configured SSH alias and a private remote workspace. The profile
 needs three absolute Linux paths: a Python launcher, a bootstrap worker file,
@@ -109,6 +133,8 @@ The service uses Linux process groups and renewable leases; keep the GUI
 server running while it owns a remote job. A settings or source change
 invalidates saved execution snapshots: register a fresh preset instead of
 rewriting an old job's hashes.
+
+</details>
 
 ## Unreal preview
 

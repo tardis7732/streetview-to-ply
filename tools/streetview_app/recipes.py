@@ -53,7 +53,8 @@ def backend_snapshot(backend):
 
 
 def operator_settings(backend):
-    path = backend.remote.get('settings_path')
+    path = (backend.environment.get('STREETVIEW_OPERATOR_SETTINGS')
+            if backend.compute == 'local' else backend.remote.get('settings_path'))
     if not path:
         return {}
     value = json.loads(Path(path).read_text(encoding='utf8'))

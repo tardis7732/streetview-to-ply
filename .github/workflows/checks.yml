@@ -20,4 +20,5 @@ jobs:
           tools/streetview_app/tests/test_selection.py
           tools/streetview_app/tests/test_provider.py
           tools/streetview_app/tests/test_workflow_api.py
+          tools/streetview_app/tests/test_local_setup.py
           tools/streetview_engine/tests/test_size_filter.py

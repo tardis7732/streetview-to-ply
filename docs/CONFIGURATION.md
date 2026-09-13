@@ -2,7 +2,7 @@
 
 The GUI can browse the map, preview streetview, select captures, and save a selection before a GPU backend is configured. Generating a PLY is an explicit action. Opening the GUI or registering a preset does not start collection or training.
 
-The public checkout contains the pipeline code and parameter templates. It does not contain a working GPU account, installed model weights, a compiled renderer, streetview photographs, or previous jobs. Follow [GPU setup](GPU_SETUP.md) to install the execution environment and acquire its dependencies.
+Follow [Local GPU setup](GPU_SETUP.md) to prepare models and tools on the same Linux / WSL2 computer. The default backend runs local Python stages.
 
 ## Start the GUI
 
@@ -14,11 +14,11 @@ python -m tools.streetview_app.server --data-dir tools/streetview_app/data --ope
 
 The server listens on `127.0.0.1:8765`. This is also the data directory used by the default launcher and Windows shortcut. Use the same `--data-dir` in the configuration command below. A fresh installation reports generation as unconfigured; this is expected.
 
-## Configure the execution host
+## Configure local generation
 
-1. Copy `examples/operator.example.json` to a private, ignored working location. Replace every `<NAME>` path placeholder with an absolute path on your Linux GPU host. The SAM3 and FLUX Python paths may point to separate environments. The DA3 depth lock must be separate from the remote supervisor's `compute.lock`.
+1. Copy `examples/operator.example.json` to a private, ignored working location. Replace every `<NAME>` path placeholder with an absolute path in your local Linux / WSL2 environment. The SAM3 and FLUX Python paths may point to separate environments. Use a dedicated DA3 depth lock path.
 2. Install the declared model revisions and binaries using [GPU setup](GPU_SETUP.md). Keep the two DA3 source checkouts at their respective declared revisions. Models, licenses, gated download access, and runtime compatibility are the operator's responsibility.
-3. Run the asset helper on that GPU host to fill the file hashes and produce the FLUX receipt. Paths and public revisions must already be filled; hash placeholders can remain at this step.
+3. Run the asset helper in that same environment to fill the file hashes and produce the FLUX receipt. Paths and public revisions must already be filled; hash placeholders can remain at this step.
 
 ```sh
 python scripts/pin_model_assets.py \
@@ -30,20 +30,33 @@ python scripts/pin_model_assets.py \
 
 Use fresh output filenames. This helper reads installed files, checks the configured DA3 Git revisions, and hashes the local assets. It performs no download, model inference, or training. The FLUX receipt's revision is operator-declared; local hashing alone does not prove that files came from that upstream revision. A complete `Flux2KleinPipeline` directory with ordinary files is required. The RT-DETR fingerprint includes absolute paths, so regenerate it after moving that model.
 
-4. Copy `operator.pinned.json` to the computer running the GUI, for example `.local/operator.json`. Its contained asset paths continue to refer to the GPU host. The FLUX receipt itself stays at its declared path on that host.
-5. Configure SSH key authentication with your own alias and install the remote launcher and worker as described in [GPU setup](GPU_SETUP.md). Then register the backend and initial preset locally:
+4. Save the pinned settings as `.local/operator.json` in this checkout. Keep the FLUX receipt at its configured local path.
+5. Activate the GPU Python environment and register the local backend and initial preset:
 
 ```sh
 python scripts/configure_backend.py \
   --settings .local/operator.json \
   --data-dir tools/streetview_app/data \
-  --host my-gpu \
-  --remote-root /srv/streetview-to-ply
+  --local
 ```
 
-This command rejects unresolved placeholders, checks the pipeline configuration, creates `backend.json`, registers a scene-free preset, and sets the default preset in `ui_preferences.json`. It does not open SSH or check remote files. Registration binds the current application code and local operator JSON; the execution host checks actual assets before using them. It is not a successful-generation receipt.
+This command rejects unresolved placeholders, checks the pipeline configuration, creates `backend.json`, registers a scene-free preset, and sets the default preset in `ui_preferences.json`. It does not start inference or training. Registration binds the current application code and local operator JSON; each stage checks actual assets before using them. It is not a successful-generation receipt.
 
 Restart the GUI after configuration. For later changes, stop active jobs, review the settings, and rerun with `--replace`. Existing job outputs and recipes are retained. Code or operator-file changes invalidate older recipe bindings, so register a new preset after updating the checkout. Do not put `.local`, generated backend settings, SSH keys, model receipts, or job data into Git.
+
+To run the GPU stages with a different local Python environment, add
+`--python /absolute/path/to/.venv-gpu/bin/python`. Keep the GUI server running
+during generation. Windows users should run both configuration and the GUI
+inside WSL2 for this recipe.
+
+<details>
+<summary>Optional: use a remote GPU</summary>
+
+Configure the SSH worker in [GPU setup](GPU_SETUP.md), use asset paths on that
+worker, and replace `--local` with `--host YOUR_ALIAS --remote-root /srv/streetview-to-ply`.
+This is optional; the local backend does not require SSH.
+
+</details>
 
 ## Default pipeline
 

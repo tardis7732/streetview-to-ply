@@ -1,4 +1,4 @@
-"""Register an operator-owned remote backend and a scene-free GUI preset.
+"""Register a local GPU backend (default) or an optional SSH backend.
 
 Configuration only: no SSH connection, model download, or GPU job is started.
 Run from the checkout after installing its basic dependencies.
@@ -36,10 +36,13 @@ def unresolved(value, prefix=''):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--settings', required=True, type=Path,
-                        help='Local JSON declaring paths on the Linux GPU host')
+                        help='Operator JSON declaring paths in the GPU execution environment')
     parser.add_argument('--data-dir', required=True, type=Path,
                         help='The same data directory passed to the GUI server')
-    parser.add_argument('--host', required=True, help='Your configured SSH alias')
+    target = parser.add_mutually_exclusive_group()
+    target.add_argument('--local', action='store_true', help='Run on this machine (default)')
+    target.add_argument('--host', help='Optional remote SSH alias; omit for local execution')
+    parser.add_argument('--python', type=Path, help='Local GPU Python executable; defaults to this Python')
     parser.add_argument('--remote-root', default='/srv/streetview-to-ply')
     parser.add_argument('--preset', type=Path, default=ROOT/'examples/preset.example.json')
     parser.add_argument('--replace', action='store_true',
@@ -56,10 +59,18 @@ def main():
         if set(preset) - {'name', 'settings', 'description'}:
             raise ValueError('Preset must contain only name, settings and optional description')
         sys.path.insert(0, str(ROOT))
-        from tools.streetview_app.cloud_setup import backend_profile
         from tools.streetview_app.jobs import Backend
         from tools.streetview_app.recipes import RecipeStore
-        value = backend_profile(settings_path, host=args.host, remote_root=args.remote_root)
+        if args.host:
+            if args.python:
+                raise ValueError('--python is for local execution only')
+            from tools.streetview_app.cloud_setup import backend_profile
+            value = backend_profile(settings_path, host=args.host, remote_root=args.remote_root)
+        else:
+            if operator.get('workflow') == 'panorama_brush_refine' and not sys.platform.startswith('linux'):
+                raise ValueError('Run this recipe and its GUI inside Linux or local WSL2; SSH is not required')
+            from tools.streetview_app.local_setup import backend_profile
+            value = backend_profile(settings_path, python=args.python)
         directory = args.data_dir.resolve()
         backend_path, preferences_path = directory/'backend.json', directory/'ui_preferences.json'
         if not args.replace and (backend_path.exists() or preferences_path.exists()):
